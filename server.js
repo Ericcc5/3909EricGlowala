@@ -14,6 +14,8 @@ app.get("/", (req, res) => {
         <body>
             <h1>Hello from Erics Server!</h1>
             <p>This page is being served by Node.js and Express.</p>
+            <p></p>
+            <img src="https://static.vecteezy.com/system/resources/previews/055/395/710/non_2x/a-white-duck-slightly-angled-with-its-orange-webbed-feet-the-duck-appears-alert-and-curious-gazing-forward-with-bright-round-eyes-free-png.png" alt="duck pic" width="400">
         </body>
         </html>
     `);
