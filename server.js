@@ -1,26 +1,25 @@
-const express = require("express");
+const http = require("http");
 
-const app = express();
+const hostname = 'E-machine68';
+const port = 3000;
 
-const PORT = process.env.PORT || 3000;
+const server = http.createServer( (req, res) => {
+    //request takes all the data of the request coming into the server
+    // res = response gives all the response data 
+    let method = req.method + ' ';
+    let url = req.url + "\n\n";
+    let headers = JSON.stringify(req.headers, null, 4);
 
-app.get("/", (req, res) => {
-    res.send(`
-        <!DOCTYPE html>
-        <html>
-        <head>
-            <title>Course Server</title>
-        </head>
-        <body>
-            <h1>Hello from Erics Server!</h1>
-            <p>This page is being served by Node.js and Express.</p>
-            <p></p>
-            <img src="https://static.vecteezy.com/system/resources/previews/055/395/710/non_2x/a-white-duck-slightly-angled-with-its-orange-webbed-feet-the-duck-appears-alert-and-curious-gazing-forward-with-bright-round-eyes-free-png.png" alt="duck pic" width="400">
-        </body>
-        </html>
-    `);
+    res.writeHead(200, {'Content-Type': 'text/plain'}); //the 200 code means 'OK'
+    res.write(method);
+    res.write(url);
+    res.write(headers);
+    read.end();
+    });
+
+server.listen(port, hostname, () =>{ //make the server start listening.
+    console.log('server running at http://'+hostname+": "+port);
 });
 
-app.listen(PORT, "0.0.0.0", () => {
-    console.log(`Server listening on port ${PORT}`);
-});
+
+

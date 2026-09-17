@@ -2,11 +2,12 @@
   "name": "course-server",
   "version": "1.0.0",
   "description": "Simple Node.js server for ACS-3909",
-  "main": "server.js", 
+  "main": "server.js",
   "scripts": {
     "start": "node server.js"
   },
   "dependencies": {
-    "express": "^5.1.0"
+    "express": "^5.1.0",
+    "nodemon": "^3.1.14"
   }
 }
