@@ -27,3 +27,8 @@ app.get('/api/getName', (req, res) => {
     res.set('Access-Control-Allow-Origin', '*');
     res.json({ name: "Eric was here" });
 });
+
+app.get('/api/getImage', (req, res) => {
+    res.set('Access-Control-Allow-Origin', '*');
+    res.sendFile('smile.jpg');
+});
