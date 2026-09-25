@@ -1,4 +1,5 @@
 const express = require("express");
+const path = require("path");
 
 const app = express();
 
@@ -30,5 +31,5 @@ app.get('/api/getName', (req, res) => {
 
 app.get('/api/getImage', (req, res) => {
     res.set('Access-Control-Allow-Origin', '*');
-    res.sendFile('./Smile.jpg');
+    res.sendFile(path.join(__dirname,'Smile.jpg'));
 });
