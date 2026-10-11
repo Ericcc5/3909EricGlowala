@@ -7,20 +7,14 @@ const PORT = process.env.PORT || 3000;
 app.use('/pictures', express.static(path.join(__dirname, 'pictures')));
 app.get("/", (req, res) => {
     
-    res.send(`
-        <!DOCTYPE html>
-        <html>
-        <head>
-            <title>MTG EricScore™</title>
-        </head>
-        <body>
-            <h1>Welcome to EricScore™!</h1>
-            <p>This page is currently under construction.</p>
-            <p></p>
-            <img src="/pictures/MtgLogo.png" alt="Awesome Logo" width="400">
-        </body>
-        </html>
-    `);
+    res.send(``);
+});
+
+app.use((req,res)=>{//404 handler
+    res.status(404).sendFile(__dirname+"/404.html");
+});
+app.use((err,req,res,next)=>{//500 handler
+    res.status(500).sendFile(__dirname+"/500.html");
 });
 
 app.listen(PORT, "0.0.0.0", () => {console.log(`Server listening on port ${PORT}`);});
