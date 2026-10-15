@@ -1,0 +1,52 @@
+<!DOCTYPE html><!--Eric glowala #3157631-->
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EricScore Home Page</title>
+    <link rel="icon" type="image/png" href="/pictures/MtgLogo.png">
+</head>
+<body>
+    <h1>ERICSCORE</h1>
+    <h2>Enter a cardname to have your card scored by my totally-not-biased algorithm</h2>
+    <form method="get" onsubmit="getData()">
+        <input type="text" id="cardname" placeholder="Enter a card name into me!">
+        <input type="submit">
+    </form>
+
+    <form id="suggest" onsubmit="suggest()">
+        <button type="submit">Just give me a random card to score</button>
+        </form>
+
+        <p id="test">hi</p>
+</body>
+</html>
+<script>
+   
+
+    async function getData(){//async function to get data from the scryfall api
+        event.preventDefault(); //forgot about this again
+         let cardname = document.getElementById("cardname").value;//the name of the card the user entered.
+
+             let txt = document.getElementById("test");
+             txt.textContent = cardname;
+             let cardurl = `https://api.scryfall.com/cards/named?fuzzy=${cardname}`;//the url to get the card data from the scryfall api.
+            //console.log("card url: "  +cardurl);
+
+    const response = await fetch(cardurl,{//followuing the documentation for the scryfall api, this is how you get a card by name.
+    method: "GET",//gotta be specific
+    headers: {
+        "User-Agent": "EricScore/1",//this is required in the documentation for the Scyfall API
+        "Accept": "*/*"} }); //it said I can just use */* for the accept header.
+
+    const MTGcard = await response.json(); //Scryfall API methods return data as a JSON blob.
+    console.log(MTGcard);
+    }//end of getData
+
+    function suggest(){
+         event.preventDefault();
+         //todo: add a variable to getData
+         //"https://api.scryfall.com/cards/random"
+           }
+
+</script>
