@@ -7,9 +7,12 @@
     <link rel="icon" type="image/png" href="/pictures/MtgLogo.png">
 </head>
 <body>
+    <img src="/pictures/MtgLogo.png" alt="mtg logo" width="250px">
     <h1>ERICSCORE</h1>
-    <h2>Enter a cardname to have your card scored by my totally-not-biased algorithm</h2>
-    <form method="get" onsubmit="getData()">
+    <h2>Enter a cardname to my textbox and have your card scored by my totally-not-biased algorithm</h2>
+    <p style="font-size: 9px;" id="reminder">You can also use /card/cardname in the url if you want</p>
+
+    <form method="get" onsubmit="getData(document.getElementById('cardname').value)"><!--pass the value of the input field into my getdata function-->
         <input type="text" id="cardname" placeholder="Enter a card name into me!">
         <input type="submit">
     </form>
@@ -18,19 +21,53 @@
         <button type="submit">Just give me a random card to score</button>
         </form>
 
-        <p id="test">hi</p>
+        <div id="cardspace"></div><!-- This is where i can put the scoring details from later!-->
+
+    <form id="downloadForm" onsubmit="downloadScore()"><!--This only shows up after the users submits a card-->
+        <button type="submit">Download your Ericscore!</button>
+    </form>
 </body>
 </html>
 <script>
-   
+    //my cool booleans to prevent errors 
+    let firstSearch = false;
+    let downloader = document.getElementById("downloadForm");
+    let Erichtml;
 
-    async function getData(){//async function to get data from the scryfall api
+    //ADDING A ONLOAD FUNCTION FOR THE WEBPAGE TO WORK WITH ROUTE PARAMETERS I GET 
+    window.addEventListener('load',()=>{
+        let params = window.location.pathname; //thank you w3schools.com
+        //need to split it up since I get the entire Url on each call, i only want the ending part (the cardname)
+        let parts = params.split("/");
+        //console.log(parts);
+        if(parts.length>2){//if we have more than 2 spaces in the url then that means we have a route parameter!
+        let cardParam = parts[2]; //the second part should be what the user entered as a cardname
+        //I noticed that having a space leaves a %20 in the url so I looked up how to decode URLencoded stuff
+        cardParam = decodeURI(cardParam);
+         console.log("parameter detected on clientside: "+cardParam);
+         getData(cardParam);//send the parameter to be scored automatically without the user needing to use the form.
+        }
+        downloader.style.display = 'none';//hide the download button until someone gets a card
+    });
+
+    async function getData(data){//async function to get data from the scryfall api
         event.preventDefault(); //forgot about this again
-         let cardname = document.getElementById("cardname").value;//the name of the card the user entered.
 
-             let txt = document.getElementById("test");
-             txt.textContent = cardname;
-             let cardurl = `https://api.scryfall.com/cards/named?fuzzy=${cardname}`;//the url to get the card data from the scryfall api.
+
+        if(!firstSearch){ //do some fun stuff on the first search of the user
+           //since the user activated this function we don't need the little reminder that you can use my route parameter functionality
+         document.getElementById("reminder").remove(); 
+          firstSearch = true;
+        }
+        else{
+            try {
+                  document.getElementById("cardiv").remove() //there was a obscure bug I was having where looking up a valid cardname after searching an invalid card would still result in an invalid response because the cardiv was removed despite not being reinstated previously from the invalid answer
+            } catch (error) {
+                console.log("there was no cardiv");//if they have searched already then I need to clear the div created for the last card.
+            }
+        }
+
+             let cardurl = `https://api.scryfall.com/cards/named?fuzzy=${data}`;//the url to get the card data from the scryfall api.
             //console.log("card url: "  +cardurl);
 
     const response = await fetch(cardurl,{//followuing the documentation for the scryfall api, this is how you get a card by name.
@@ -41,12 +78,66 @@
 
     const MTGcard = await response.json(); //Scryfall API methods return data as a JSON blob.
     console.log(MTGcard);
+
+        //now that I have the card data, ill send it to my server for processing into the Eric Score! 
+        const ajax = new XMLHttpRequest();
+        ajax.open("POST", "/ericscore");
+        ajax.setRequestHeader("Content-Type", "application/json");
+        //what to do when we get it back
+        ajax.addEventListener("load", function(){
+            let cardspace = document.getElementById("cardspace");
+            Erichtml = this.responseText; //store this incase the user wants to download it            
+            cardspace.innerHTML = Erichtml;//im going to be returning some html from the server so i'll add it into the empty div i made for it above ^
+            downloader.style.display = 'block';
+        });
+        ajax.send(JSON.stringify(MTGcard));//turn the object into a json string so the server can accept it lol
+
     }//end of getData
 
-    function suggest(){
+    async function suggest(){
          event.preventDefault();
-         //todo: add a variable to getData
-         //"https://api.scryfall.com/cards/random"
-           }
+         //pass a random card name to the getdata function. 
+         const randomcard = await fetch("https://api.scryfall.com/cards/random",{
+            method: "GET",
+            headers: {"User-Agent": "EricScore/1", "Accept": "*/*"} });//same deal
+        const MTGcard = await randomcard.json();//gotta turn the blob into a readable json
+        console.log("random card name: "+MTGcard.name);
 
+        //now that I have the card data, ill send it to my server for processing into the Eric Score! 
+        const ajax = new XMLHttpRequest();
+        ajax.open("POST", "/ericscore");
+        ajax.setRequestHeader("Content-Type", "application/json");
+        //what to do when we get it back
+        ajax.addEventListener("load", function(){
+            let cardspace = document.getElementById("cardspace");
+            Erichtml = this.responseText; //store this incase the user wants to download it            
+            cardspace.innerHTML = Erichtml;
+            downloader.style.display = 'block';
+        });
+        ajax.send(JSON.stringify(MTGcard));//send that json to the server so it can process it
+           }//end of suggest
+
+        function downloadScore(){//letting the user download their html ericscore
+            event.preventDefault();//you know the drill
+            //make the HTML page for the client who clicked my button
+            const fullHTML = `<!DOCTYPE html>
+            <html lang="en">
+            <head>
+            <meta charset="UTF-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+            <title>My EricScore Report</title>
+            </head>
+            <body>
+            ${Erichtml}
+            </body>
+            </html>`;
+            const blob = new Blob([fullHTML], {type: "text/html"});// now I gotta do blob shit to make it downloadable and mark it as an HTML
+            const url = URL.createObjectURL(blob); // Create a temporary URL for the file
+            const link = document.createElement("a"); // Create a temporary link and click it to download the cool eric score that isn't biased
+            link.href = url;//set the reference to the url i just made for it
+            link.download = "EricScore.html"; //thank you w3schools.org
+            link.click();
+            URL.revokeObjectURL(url); // Clean up the temporary URL like a nerd
+        }
+           //I know I could be doing consolidation or something since I have repeating code but this isn't a design pattern class or whatever :)
 </script>
