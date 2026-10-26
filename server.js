@@ -66,6 +66,7 @@ app.post("/ericscore",(req,res)=>{
            score-=1; details.push("What is the cmc? -1");
             break;}
 
+
             //Time to judge the contents of the card's typeline! 
     let subtypes = card.type_line;
     if(subtypes.includes("Creature")){score+=2; details.push("Creatures are pretty cool +2");}
