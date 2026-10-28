@@ -40,9 +40,49 @@ app.post("/ericscore",(req,res)=>{
     if (favorites.includes(card.name)) { //I am very biased
     score += 15;
     details.push("Eric's personal favorite: +15");}
+
+        //check the colors of the card
+    let colors = card.color_identity;
+    if(colors==0){score +=5; details.push("Colorless Cards are awesome! +5");}
+    else if (colors.length == 5){score +=5; details.push("WUBRG +5");}
+    else if (colors.length == 4){score +=4; details.push("Nephilim colors are sick +4");}
+    //I'm too lazy to do individual cases for the three-color pairs right now
+    else if (colors.length == 3){score +=3; details.push("Tri-color is awesome man +3");}
+    else{
+        //my idea is to concatenate the array of card colors and use a lookup table to make the scoring easier.
+        //this is because there are 5 colors in MTG. doing these cases by hand would take forever. 
+        //WUBRG is formatted in JSON as BGRUW
+       const colorScore ={
+        "U": -5, //f**k monoblue
+        "G": 3,
+        "R": -3,
+        "W": 0,
+        "B": 4,//mono black is cool
+        "BG": 6,//Golgari is really neat 
+        "BR": 2,
+        "BU": -1,
+        "BW": -6,//Orzhov is lame
+        "GR": 2,
+        "GU": 5, //Simic is awesome #swag
+        "GW": -1,
+        "RU": -4,
+        "RW": -4,
+        "UW": -10} //Blue/White control is so cancerous
+        let C = ""
+        //concatenate the array of colors into one string
+        colors.forEach(element => {
+            C+=element;
+        });
+        score+= colorScore[C];
+        details.push(`Color rating: ${colorScore[C]}`)
+    }
+
+
     //Check the CMC of the card
     let cmc = card.cmc;
     //I think that certain CMCs are better than others so imma use a switch case to check em
+    if (cmc>16){score +=100; details.push("ARE YOU CASTING GLEEMAX?? +100");}
+    else{
     switch (cmc) { //gonna make all the cases a single line so i can save line space, you're welcome.
         case cmc=0:score +=3; details.push("You can't get a better mana cost than free! +3");break;
         case cmc=1:score +=2; details.push("A one-drop is pretty cool +2");break;
@@ -61,10 +101,18 @@ app.post("/ericscore",(req,res)=>{
         case cmc=14:score -=14; details.push("I don't even think there is a 14-CMC spell dude -14");break;
         case cmc=15:score +=15; details.push("IS THAT EMRAKUL THE AEONS TORN?? +15");break; //I love emrakul
         case cmc=16:score +=3; details.push("Draco is pretty cool +3");break;
-        case cmc>16:score +=100; details.push("ARE YOU CASTING GLEEMAX?? +100");break;
         default:
            score-=1; details.push("What is the cmc? -1");
-            break;}
+            break;}}//end of the CMC part
+
+        //ranking the card based on it's rarity
+        switch (card.rarity) {
+            case "rare":score -=1; details.push("Rare card costs a lot of wildcards -1");break;
+            case "uncommon":score +=3; details.push("Uncommons are pretty cool +3");break;
+            case "common":score -=2; details.push("Lame common -2");break;
+            case "mythic":score +=5; details.push("Mythic card! +5");break;
+            default:score +=0; details.push("What is the rarity?");break
+        }
 
 
             //Time to judge the contents of the card's typeline! 
@@ -83,6 +131,7 @@ app.post("/ericscore",(req,res)=>{
     if(subtypes.includes("Goblin")){score-=2; details.push("Goblin -2");}
     if(subtypes.includes("Human")){score-=3; details.push("Humans are boring -3");}
     if(subtypes.includes("Dinosaur")){score-=5; details.push("Dinosaurs are lameeee -5");}
+    if(subtypes.includes("Nephilim")){score+=15; details.push("NEPHILIM!!!??? +15");}
 
 
     if(card.power!=undefined){//if it is a creature then it will have a toughness so I don't need to check for both
